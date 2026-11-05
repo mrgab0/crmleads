@@ -1,6 +1,6 @@
-# Lead Softphone
+# CRM Leads
 
-Softphone profesional con integración de WhatsApp, construido con **Next.js 14** y **Twilio**. Deployado en **Vercel** (gratis), con MongoDB Atlas para persistencia.
+CRM Comercial Multicanal, Softphone VoIP con Twilio WebRTC, Bandeja de WhatsApp y Motor de Email Marketing. Construido con **Next.js 14**, **Twilio**, **Resend**, **Checkly Cloud** y **MongoDB Atlas**, optimizado para despliegue en **Vercel**.
 
 ## Stack
 
