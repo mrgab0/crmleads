@@ -39,7 +39,6 @@ export function useTwilioDevice() {
       const device = new Device(token, {
         codecPreferences: [Call.Codec.Opus, Call.Codec.PCMU],
         maxAverageBitrate: 16000, // Opus a 16kbps: optimización de datos móviles
-        enableIceRestart: true,
       });
 
       device.on('registered', () => {
