@@ -13,40 +13,37 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Configure Vercel Project Link & Enable Auto-Deploy
+      - name: Trigger Vercel Production Deployment via API
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          mkdir -p .vercel
-          cat << 'EOF' > .vercel/project.json
-          {
-            "projectId": "prj_5cVcatp731kiwutA3U0RDbXbqqvP",
-            "orgId": "team_qg3qxgryuQ89HGdoGZOJrlWg"
-          }
-          EOF
-
-          echo "Enabling GitHub auto-deployments on Vercel..."
-          curl -s -X PATCH "https://api.vercel.com/v9/projects/prj_5cVcatp731kiwutA3U0RDbXbqqvP?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
+          echo "Triggering Vercel deployment for crmleads..."
+          RESPONSE=$(curl -s -X POST "https://api.vercel.com/v13/deployments?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
             -H "Authorization: Bearer $VERCEL_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{"gitProviderOptions":{"createDeployments":"all"}}'
+            -d '{
+              "name": "crmleads",
+              "project": "prj_5cVcatp731kiwutA3U0RDbXbqqvP",
+              "target": "production",
+              "gitSource": {
+                "type": "github",
+                "repoId": 1447420052,
+                "ref": "main"
+              }
+            }')
 
-      - name: Deploy to Vercel Production
-        id: deploy
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prod --yes --token=$VERCEL_TOKEN --scope=team_qg3qxgryuQ89HGdoGZOJrlWg)
-          echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "Response: $RESPONSE"
+          DEPLOYMENT_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+          DEPLOYMENT_URL=$(echo "$RESPONSE" | jq -r '.url // empty')
+
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "❌ Deployment trigger failed!"
+            exit 1
+          fi
+
           echo "============================================="
-          echo "🚀 VERCEL DEPLOYMENT SUCCESSFUL!"
-          echo "Production URL: $DEPLOYMENT_URL"
+          echo "🚀 VERCEL DEPLOYMENT TRIGGERED SUCCESSFULLY!"
+          echo "Deployment ID: $DEPLOYMENT_ID"
+          echo "Deployment URL: https://$DEPLOYMENT_URL"
+          echo "Production URL: https://crmleads.vercel.app"
           echo "============================================="
