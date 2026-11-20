@@ -16,26 +16,35 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Inspect Vercel Token & Account
+      - name: Configure Vercel Project Link & Enable Auto-Deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "=== Test /v2/user ==="
-          curl -s -w "\nHTTP_STATUS: %{http_code}\n" -H "Authorization: Bearer $VERCEL_TOKEN" https://api.vercel.com/v2/user
-          echo "=== Test /v9/projects ==="
-          curl -s -w "\nHTTP_STATUS: %{http_code}\n" -H "Authorization: Bearer $VERCEL_TOKEN" https://api.vercel.com/v9/projects
+          mkdir -p .vercel
+          cat << 'EOF' > .vercel/project.json
+          {
+            "projectId": "prj_5cVcatp731kiwutA3U0RDbXbqqvP",
+            "orgId": "team_qg3qxgryuQ89HGdoGZOJrlWg"
+          }
+          EOF
 
-      - name: Deploy to Vercel
+          echo "Enabling GitHub auto-deployments on Vercel..."
+          curl -s -X PATCH "https://api.vercel.com/v9/projects/prj_5cVcatp731kiwutA3U0RDbXbqqvP?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"gitProviderOptions":{"createDeployments":"all"}}'
+
+      - name: Deploy to Vercel Production
         id: deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          DEPLOYMENT_URL=$(vercel deploy --prod --yes --token=$VERCEL_TOKEN)
+          DEPLOYMENT_URL=$(vercel deploy --prod --yes --token=$VERCEL_TOKEN --scope=team_qg3qxgryuQ89HGdoGZOJrlWg)
           echo "url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
           echo "============================================="
           echo "🚀 VERCEL DEPLOYMENT SUCCESSFUL!"
