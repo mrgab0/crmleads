@@ -9,7 +9,7 @@ const TARGET_URL =
   process.env.CHECKLY_TARGET_URL ||
   process.env.ENVIRONMENT_URL ||
   process.env.PLAYWRIGHT_TEST_BASE_URL ||
-  'https://lead-softphone.vercel.app';
+  'https://crmleads.vercel.app';
 
 test.describe('Lead Softphone - Visual Eyes & CRM Suite', () => {
   // Manejo de token de bypass si Vercel Deployment Protection está activo

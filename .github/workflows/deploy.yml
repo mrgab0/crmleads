@@ -45,5 +45,29 @@ jobs:
           echo "🚀 VERCEL DEPLOYMENT TRIGGERED SUCCESSFULLY!"
           echo "Deployment ID: $DEPLOYMENT_ID"
           echo "Deployment URL: https://$DEPLOYMENT_URL"
-          echo "Production URL: https://crmleads.vercel.app"
           echo "============================================="
+
+          echo "Waiting for deployment $DEPLOYMENT_ID to finish building..."
+          for i in {1..40}; do
+            STATUS_RESP=$(curl -s "https://api.vercel.com/v13/deployments/$DEPLOYMENT_ID?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
+              -H "Authorization: Bearer $VERCEL_TOKEN")
+            READY_STATE=$(echo "$STATUS_RESP" | jq -r '.readyState // .status // empty')
+            echo "Attempt $i: readyState = $READY_STATE"
+            if [ "$READY_STATE" = "READY" ]; then
+              echo "✅ Deployment is READY!"
+              echo "Aliases:"
+              echo "$STATUS_RESP" | jq -r '.alias[]? // empty'
+              break
+            elif [ "$READY_STATE" = "ERROR" ] || [ "$READY_STATE" = "CANCELED" ]; then
+              echo "❌ Deployment failed with state: $READY_STATE"
+              echo "$STATUS_RESP" | jq .
+              exit 1
+            fi
+            sleep 10
+          done
+
+          echo "Fetching Project Domains and Aliases..."
+          PROJ_RESP=$(curl -s "https://api.vercel.com/v9/projects/prj_5cVcatp731kiwutA3U0RDbXbqqvP?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
+            -H "Authorization: Bearer $VERCEL_TOKEN")
+          echo "Project Targets / Aliases:"
+          echo "$PROJ_RESP" | jq -r '.targets.production.alias[]? // empty'
