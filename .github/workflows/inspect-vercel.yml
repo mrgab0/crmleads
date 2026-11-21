@@ -1,0 +1,24 @@
+name: Inspect Vercel Project
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect Vercel Env and Integrations
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          echo "=== 1. Fetching Project Environment Variables ==="
+          curl -s "https://api.vercel.com/v9/projects/prj_5cVcatp731kiwutA3U0RDbXbqqvP/env?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | jq .
+
+          echo "=== 2. Fetching Project Details & Integrations ==="
+          curl -s "https://api.vercel.com/v9/projects/prj_5cVcatp731kiwutA3U0RDbXbqqvP?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | jq '{id: .id, name: .name, link: .link}'
+
+          echo "=== 3. Attempting to list Team Integrations ==="
+          curl -s "https://api.vercel.com/v1/integrations/installations?teamId=team_qg3qxgryuQ89HGdoGZOJrlWg" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" | jq .
